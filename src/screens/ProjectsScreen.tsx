@@ -31,15 +31,18 @@ export default function ProjectsScreen({ navigation }: Props) {
     fetch();
     loadStored();
     navigation.setOptions({
-      headerRight: () => (
-        <View style={styles.headerRight}>
-          <TouchableOpacity onPress={fetch} style={styles.headerBtn}>
-            <Text style={styles.headerBtnText}>↻</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Sign out</Text>
+      headerTitle: () => (
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.headerTitleText}>Projects</Text>
+          <TouchableOpacity onPress={fetch} style={styles.headerRefreshBtn} hitSlop={8}>
+            <Text style={styles.headerRefreshIcon}>↻</Text>
           </TouchableOpacity>
         </View>
+      ),
+      headerRight: () => (
+        <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+          <Text style={styles.logoutText}>Sign out</Text>
+        </TouchableOpacity>
       ),
     });
   }, [fetch, navigation, logout, loadStored]);
@@ -179,9 +182,10 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: '600', color: COLORS.text },
   desc: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
   empty: { textAlign: 'center', marginTop: SPACING.xl, color: COLORS.textMuted },
-  headerRight: { flexDirection: 'row', alignItems: 'center' },
-  headerBtn: { marginRight: SPACING.sm },
-  headerBtnText: { color: COLORS.primary, fontSize: 20 },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  headerTitleText: { fontSize: 17, fontWeight: '600', color: COLORS.text },
+  headerRefreshBtn: { padding: SPACING.xs },
+  headerRefreshIcon: { fontSize: 26, color: COLORS.primary, lineHeight: 30 },
   logoutBtn: { marginRight: SPACING.sm },
   logoutText: { color: COLORS.primary, fontSize: 14 },
 });
