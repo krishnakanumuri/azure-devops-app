@@ -1,0 +1,69 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+# Allow one concurrent deployment; cancel in-progress runs on new push
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build web app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json   # reads "engines.node"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # GitHub Pages project sites are served from /<repo-name>/.
+      # Setting PUBLIC_URL tells webpack to prefix all asset URLs correctly
+      # and embeds the base path so React Navigation deep links resolve.
+      # For a custom domain (or user/org pages at the root) set PUBLIC_URL to '/'.
+      - name: Build production bundle
+        run: npm run web:build
+        env:
+          PUBLIC_URL: /${{ github.event.repository.name }}/
+
+      # GitHub Pages has no server-side routing, so any deep-link URL that the
+      # browser navigates to directly will get a 404. Serving index.html as 404.html
+      # lets GitHub Pages return that page (with status 404) so the React app still
+      # boots and React Navigation handles the route on the client side.
+      - name: Create SPA fallback for deep links
+        run: cp web-dist/index.html web-dist/404.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web-dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

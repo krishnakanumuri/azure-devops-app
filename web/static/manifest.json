@@ -1,0 +1,25 @@
+{
+  "name": "Azure DevOps Pipeline Manager",
+  "short_name": "ADO Manager",
+  "description": "Manage and monitor Azure DevOps pipelines from any device",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f3f3",
+  "theme_color": "#0078d4",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "azuredevops",
+      "url": "./?url=%s"
+    }
+  ]
+}
