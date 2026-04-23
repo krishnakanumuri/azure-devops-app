@@ -82,7 +82,7 @@ export default function ProjectsScreen({ navigation }: Props) {
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
+          onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
           clearButtonMode="while-editing"
           autoCorrect={false}
           autoCapitalize="none"
