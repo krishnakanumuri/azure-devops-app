@@ -79,7 +79,7 @@ module.exports = (env, argv) => {
         new GenerateSW({
           clientsClaim: true,
           skipWaiting: true,
-          navigateFallback: '/index.html',
+          navigateFallback: publicUrl + 'index.html',
           // Don't intercept API proxy routes with the navigate fallback
           navigateFallbackDenylist: [/^\/ado\//, /^\/vssps\//],
           runtimeCaching: [

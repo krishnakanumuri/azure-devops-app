@@ -51,14 +51,17 @@ function transformIncomingUrl(url: string): string {
   return target;
 }
 
-// On web, accept the deployed origin + base path so normal browser navigation works as deep links.
-// PUBLIC_URL is injected by webpack DefinePlugin (defaults to '/').
+// On web, prefix is just the origin. The base path (e.g. /azure-devops-app/) is baked
+// into each screen path so React Navigation generates correct history URLs.
 const prefixes: string[] = ['azuredevops://'];
 if (Platform.OS === 'web') {
   const origin = (globalThis as Record<string, any>).location?.origin as string | undefined;
-  const base = (process.env.PUBLIC_URL as string | undefined) ?? '/';
-  if (origin) prefixes.push(origin + base.replace(/^\//, ''));
+  if (origin) prefixes.push(origin + '/');
 }
+
+// Strip leading/trailing slashes → '' locally, 'azure-devops-app' on GitHub Pages.
+const basePath = ((process.env.PUBLIC_URL as string | undefined) ?? '/').replace(/^\/|\/$/g, '');
+const p = (path: string) => (basePath ? `${basePath}/${path}` : path);
 
 const linking: LinkingOptions<MainStackParamList> = {
   prefixes,
@@ -67,12 +70,9 @@ const linking: LinkingOptions<MainStackParamList> = {
     const url = await Linking.getInitialURL();
     const transformed = url ? transformIncomingUrl(url) : null;
 
-    // On web, save deep links to sessionStorage so we can restore them after login.
-    // React Navigation may change the browser URL to '/Login' when user isn't authenticated.
+    // Save deep links so we can restore them after login.
     if (Platform.OS === 'web' && transformed) {
       const win = globalThis as Record<string, any>;
-      const isNonRoot = prefixes.some(p => transformed.startsWith(p)) &&
-        !transformed.match(/\/?$/) || transformed.split('/').length > 4;
       const isLoginPath = transformed.endsWith('/Login') || transformed.endsWith('/');
       if (!isLoginPath) {
         win.sessionStorage?.setItem?.('pendingDeepLink', transformed);
@@ -91,29 +91,29 @@ const linking: LinkingOptions<MainStackParamList> = {
 
   config: {
     screens: {
-      Projects: 'projects',
+      Projects: p('projects'),
       Pipelines: {
-        path: 'projects/:projectName/pipelines',
+        path: p('projects/:projectName/pipelines'),
         parse: { projectName: String },
       },
       Runs: {
-        path: 'projects/:projectName/pipelines/:pipelineId/runs',
+        path: p('projects/:projectName/pipelines/:pipelineId/runs'),
         parse: { projectName: String, pipelineId: Number },
       },
       RunDetails: {
-        path: 'projects/:projectName/pipelines/:pipelineId/runs/:runId',
+        path: p('projects/:projectName/pipelines/:pipelineId/runs/:runId'),
         parse: { projectName: String, pipelineId: Number, runId: Number },
       },
       QueueRun: {
-        path: 'projects/:projectName/pipelines/:pipelineId/queue',
+        path: p('projects/:projectName/pipelines/:pipelineId/queue'),
         parse: { projectName: String, pipelineId: Number },
       },
       LogViewer: {
-        path: 'projects/:projectName/builds/:buildId/logs/:logId',
+        path: p('projects/:projectName/builds/:buildId/logs/:logId'),
         parse: { projectName: String, buildId: Number, logId: Number },
       },
       BuildResolver: {
-        path: 'resolve',
+        path: p('resolve'),
         parse: { buildId: Number },
       },
     },
