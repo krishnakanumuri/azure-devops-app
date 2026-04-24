@@ -15,9 +15,29 @@ import { useProjects } from '../hooks/useProjects';
 import { useAuthStore, useRecentProjectsStore } from '../store';
 import ErrorBanner from '../components/ErrorBanner';
 import LoadingOverlay from '../components/LoadingOverlay';
+import HelpDialog from '../components/HelpDialog';
 import { COLORS, SPACING } from '../theme';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Projects'>;
+
+const NAV_HELP_SECTIONS = [
+  {
+    heading: 'Projects',
+    body: 'Lists all projects in your Azure DevOps organisation. Tap a project to browse its pipelines.',
+  },
+  {
+    heading: 'Pipelines',
+    body: 'Shows all pipelines for the selected project. Tap a pipeline to view its recent runs. Use the search bar to filter — recently opened pipelines appear when you focus the search.',
+  },
+  {
+    heading: 'Runs',
+    body: 'Lists recent pipeline runs. Tap a run to see its timeline with stages, jobs, and tasks.',
+  },
+  {
+    heading: 'Log Viewer',
+    body: 'Tap any task in the run timeline to view its full log output.',
+  },
+];
 
 export default function ProjectsScreen({ navigation }: Props) {
   const { projects, loading, error, fetch } = useProjects();
@@ -26,6 +46,7 @@ export default function ProjectsScreen({ navigation }: Props) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
 
   useEffect(() => {
     fetch();
@@ -40,9 +61,14 @@ export default function ProjectsScreen({ navigation }: Props) {
         </View>
       ),
       headerRight: () => (
-        <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Sign out</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={() => setHelpVisible(true)} hitSlop={8} style={styles.helpBtn}>
+            <Text style={styles.helpIcon}>?</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+            <Text style={styles.logoutText}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [fetch, navigation, logout, loadStored]);
@@ -133,6 +159,13 @@ export default function ProjectsScreen({ navigation }: Props) {
           }
         />
       )}
+
+      <HelpDialog
+        visible={helpVisible}
+        onClose={() => setHelpVisible(false)}
+        title="App Help"
+        sections={NAV_HELP_SECTIONS}
+      />
     </View>
   );
 }
@@ -186,6 +219,16 @@ const styles = StyleSheet.create({
   headerTitleText: { fontSize: 17, fontWeight: '600', color: COLORS.text },
   headerRefreshBtn: { padding: SPACING.xs },
   headerRefreshIcon: { fontSize: 26, color: COLORS.primary, lineHeight: 30 },
-  logoutBtn: { marginRight: SPACING.sm },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginRight: SPACING.sm },
+  helpBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  helpIcon: { color: '#fff', fontSize: 13, fontWeight: '700', lineHeight: 17 },
+  logoutBtn: {},
   logoutText: { color: COLORS.primary, fontSize: 14 },
 });

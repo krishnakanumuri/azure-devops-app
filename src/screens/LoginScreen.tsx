@@ -13,6 +13,22 @@ import {
 import { useAuthStore } from '../store';
 import { getProjects } from '../api';
 import { COLORS, SPACING } from '../theme';
+import HelpDialog from '../components/HelpDialog';
+
+const LOGIN_HELP_SECTIONS = [
+  {
+    heading: 'Organisation URL',
+    body: 'Enter your Azure DevOps organisation URL, e.g.\nhttps://dev.azure.com/yourorg\n\nFor on-premise servers use your TFS collection URL.',
+  },
+  {
+    heading: 'Personal Access Token (PAT)',
+    body: 'Generate a PAT in Azure DevOps:\n1. Go to User Settings → Personal Access Tokens\n2. Click "New Token"\n3. Set the following scopes:\n   • Build — Read & Execute\n   • Project and Team — Read\n4. Copy the token and paste it here.',
+  },
+  {
+    heading: 'Security',
+    body: 'Your PAT is stored securely on this device and never sent anywhere except your Azure DevOps organisation.',
+  },
+];
 
 export default function LoginScreen() {
   const { login, orgUrl: storedOrgUrl } = useAuthStore();
@@ -20,6 +36,7 @@ export default function LoginScreen() {
   const [pat, setPat] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [helpVisible, setHelpVisible] = useState(false);
 
   const handleLogin = async () => {
     if (!orgUrl.trim() || !pat.trim()) {
@@ -52,6 +69,13 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
+          <View style={styles.formTitleRow}>
+            <Text style={styles.formTitle}>Sign In</Text>
+            <TouchableOpacity onPress={() => setHelpVisible(true)} hitSlop={8} style={styles.helpBtn}>
+              <Text style={styles.helpIcon}>?</Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.label}>Organisation URL</Text>
           <TextInput
             style={styles.input}
@@ -90,11 +114,17 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={styles.hint}>
-            Generate a PAT in Azure DevOps → User Settings → Personal Access Tokens.{'\n'}
-            Required scopes: Build (Read &amp; Execute), Project and Team (Read).
+            Tap ? above for help generating a PAT.
           </Text>
         </View>
       </ScrollView>
+
+      <HelpDialog
+        visible={helpVisible}
+        onClose={() => setHelpVisible(false)}
+        title="Sign In Help"
+        sections={LOGIN_HELP_SECTIONS}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -115,6 +145,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
+  formTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  formTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  helpBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  helpIcon: { color: '#fff', fontSize: 14, fontWeight: '700', lineHeight: 18 },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 6 },
   input: {
     borderWidth: 1,
