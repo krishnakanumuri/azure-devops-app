@@ -6,10 +6,9 @@ import { COLORS, SPACING } from '../theme';
 interface Props {
   pipeline: Pipeline;
   onRuns: () => void;
-  onQueue: () => void;
 }
 
-export default function PipelineCard({ pipeline, onRuns, onQueue }: Props) {
+export default function PipelineCard({ pipeline, onRuns }: Props) {
   const folder = pipeline.folder && pipeline.folder !== '\\' ? pipeline.folder.replace(/\\/g, ' / ') : null;
   return (
     <TouchableOpacity style={styles.card} onPress={onRuns} activeOpacity={0.8}>
@@ -21,9 +20,6 @@ export default function PipelineCard({ pipeline, onRuns, onQueue }: Props) {
       <View style={styles.actions}>
         <TouchableOpacity style={styles.btn} onPress={onRuns}>
           <Text style={styles.btnText}>Runs</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={onQueue}>
-          <Text style={[styles.btnText, styles.btnPrimaryText]}>Queue</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

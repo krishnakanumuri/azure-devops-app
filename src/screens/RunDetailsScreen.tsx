@@ -25,6 +25,10 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
+function wrapName(name: string): string {
+  return name.replace(/([.\-_/])/g, '$1\u200B');
+}
+
 export default function RunDetailsScreen({ navigation, route }: Props) {
   const { projectName, pipelineId, runId, runName } = route.params;
   const { run, timeline, loading, error, fetch } = useRunDetails(projectName, pipelineId, runId);
@@ -90,39 +94,18 @@ export default function RunDetailsScreen({ navigation, route }: Props) {
       {run && (
         <View style={styles.header}>
           <View style={styles.headerRow}>
-            <Text style={styles.runName}>{run.name}</Text>
-            <StatusBadge status={effectiveStatus} />
+            <Text style={styles.runName}>{wrapName(run.name)}</Text>
+            <View style={styles.badgeWrap}>
+              <StatusBadge status={effectiveStatus} />
+            </View>
           </View>
-          <Text style={styles.meta}>
-            {run.resources?.repositories?.self?.refName?.replace('refs/heads/', '') ?? ''}
-          </Text>
-          {run.requestedFor?.displayName ? (
-            <Text style={styles.meta}>👤 {run.requestedFor.displayName}</Text>
-          ) : null}
+          {run.resources?.repositories?.self?.refName
+            ? <Text style={styles.meta}>🌿 {run.resources.repositories.self.refName.replace('refs/heads/', '')}</Text>
+            : null}
+          {run.requestedFor?.displayName
+            ? <Text style={styles.meta}>👤 {run.requestedFor.displayName}</Text>
+            : null}
           <Text style={styles.meta}>Started: {formatDate(run.createdDate)}</Text>
-
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={styles.actionBtn}
-              onPress={() =>
-                navigation.navigate('QueueRun', {
-                  projectName,
-                  pipelineId,
-                  pipelineName: run.pipeline.name,
-                  existingRun: {
-                    runId: run.id,
-                    branch: run.resources?.repositories?.self?.refName?.replace('refs/heads/', ''),
-                    variables: Object.fromEntries(
-                      Object.entries(run.variables ?? {}).map(([k, v]) => [k, v.value]),
-                    ),
-                  },
-                })
-              }>
-              <Text style={styles.actionBtnText}>
-                {run.state === 'completed' ? '↺ Retry Run' : '+ Queue New Run'}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
       )}
 
@@ -175,8 +158,9 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
-  runName: { fontSize: 16, fontWeight: '700', color: COLORS.text, flex: 1, marginRight: 8 },
+  runName: { flex: 1, minWidth: 0, fontSize: 16, fontWeight: '700', color: COLORS.text, marginRight: 8 },
   meta: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  badgeWrap: { flexShrink: 0 },
   actionRow: { marginTop: SPACING.sm },
   actionBtn: {
     alignSelf: 'flex-start',

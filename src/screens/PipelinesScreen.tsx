@@ -62,13 +62,6 @@ export default function PipelinesScreen({ navigation, route }: Props) {
                 pipelineName: item.name,
               })
             }
-            onQueue={() =>
-              navigation.navigate('QueueRun', {
-                projectName,
-                pipelineId: item.id,
-                pipelineName: item.name,
-              })
-            }
           />
         )}
         ListEmptyComponent={

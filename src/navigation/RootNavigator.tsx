@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Linking, Platform } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import type { LinkingOptions } from '@react-navigation/native';
+import { NavigationContainer, getStateFromPath as defaultGetStateFromPath } from '@react-navigation/native';
+import type { LinkingOptions, PartialState, NavigationState } from '@react-navigation/native';
 import { useAuthStore } from '../store';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
@@ -87,6 +87,53 @@ const linking: LinkingOptions<MainStackParamList> = {
       listener(transformIncomingUrl(url));
     });
     return () => sub.remove();
+  },
+
+  /**
+   * Rebuild the full ancestor stack when loading a deep URL directly (e.g. on browser refresh).
+   * Without this, React Navigation starts with a single-entry stack and the back button disappears.
+   */
+  getStateFromPath(path, options) {
+    const state = defaultGetStateFromPath(path, options);
+    if (!state?.routes?.length) return state;
+
+    const top = state.routes[state.routes.length - 1];
+    const name = top.name as string;
+    const params = ((top.params ?? {}) as Record<string, any>);
+
+    type Route = { name: string; params?: object };
+    const routes: Route[] = [{ name: 'Projects' }];
+
+    // Root — no ancestors needed
+    if (name === 'Projects') return state;
+
+    // BuildResolver has no pipeline hierarchy
+    if (name === 'BuildResolver') {
+      return { ...state, routes: [...routes, { name, params }], index: 1 } as PartialState<NavigationState>;
+    }
+
+    // Pipelines layer
+    if (params.projectName) {
+      routes.push({ name: 'Pipelines', params: { projectName: params.projectName } });
+    }
+    if (name === 'Pipelines') {
+      return { ...state, routes, index: routes.length - 1 } as PartialState<NavigationState>;
+    }
+
+    // Runs layer (only when pipelineId is present in the URL)
+    if (params.pipelineId) {
+      routes.push({
+        name: 'Runs',
+        params: { projectName: params.projectName, pipelineId: params.pipelineId },
+      });
+    }
+    if (name === 'Runs') {
+      return { ...state, routes, index: routes.length - 1 } as PartialState<NavigationState>;
+    }
+
+    // All deeper screens (RunDetails, QueueRun, LogViewer, …)
+    routes.push({ name, params });
+    return { ...state, routes, index: routes.length - 1 } as PartialState<NavigationState>;
   },
 
   config: {

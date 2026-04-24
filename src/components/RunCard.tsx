@@ -7,7 +7,6 @@ import { COLORS, SPACING } from '../theme';
 interface Props {
   run: PipelineRun;
   onPress: () => void;
-  onRetry: () => void;
 }
 
 function formatDuration(start?: string, end?: string): string {
@@ -24,7 +23,12 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
 }
 
-export default function RunCard({ run, onPress, onRetry }: Props) {
+// Insert zero-width spaces after break characters so long strings without spaces can wrap.
+function wrapName(name: string): string {
+  return name.replace(/([.\-_/])/g, '$1\u200B');
+}
+
+export default function RunCard({ run, onPress }: Props) {
   const branch = run.resources?.repositories?.self?.refName?.replace('refs/heads/', '') ?? '';
   const triggeredBy = run.requestedFor?.displayName ?? '';
   const effectiveStatus = run.state === 'completed' ? (run.result ?? 'unknown') : run.state;
@@ -32,8 +36,10 @@ export default function RunCard({ run, onPress, onRetry }: Props) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.row}>
-        <Text style={styles.name}>{run.name}</Text>
-        <StatusBadge status={effectiveStatus} small />
+        <Text style={styles.name}>{wrapName(run.name)}</Text>
+        <View style={styles.badgeWrap}>
+          <StatusBadge status={effectiveStatus} small />
+        </View>
       </View>
       {branch ? <Text style={styles.meta}>🌿 {branch}</Text> : null}
       {triggeredBy ? <Text style={styles.meta}>👤 {triggeredBy}</Text> : null}
@@ -41,11 +47,6 @@ export default function RunCard({ run, onPress, onRetry }: Props) {
         <Text style={styles.meta}>{formatDate(run.createdDate)}</Text>
         <Text style={styles.meta}>{formatDuration(run.createdDate, run.finishedDate)}</Text>
       </View>
-      {(run.state === 'completed') && (
-        <TouchableOpacity style={styles.retryBtn} onPress={onRetry}>
-          <Text style={styles.retryText}>↺ Retry</Text>
-        </TouchableOpacity>
-      )}
     </TouchableOpacity>
   );
 }
@@ -64,8 +65,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   row: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 },
-  name: { flex: 1, fontSize: 14, fontWeight: '600', color: COLORS.text, marginRight: 8 },
+  name: { flex: 1, minWidth: 0, fontSize: 14, fontWeight: '600', color: COLORS.text, marginRight: 8 },
   meta: { fontSize: 12, color: COLORS.textSecondary },
-  retryBtn: { alignSelf: 'flex-end', marginTop: 6 },
-  retryText: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
+  badgeWrap: { flexShrink: 0 },
 });

@@ -14,3 +14,19 @@ export async function getPipeline(project: string, pipelineId: number): Promise<
   );
   return data;
 }
+
+export interface DefinitionVariable {
+  value?: string;
+  allowOverride?: boolean;
+  isSecret?: boolean;
+}
+
+export async function getBuildDefinition(
+  project: string,
+  definitionId: number,
+): Promise<{ variables?: Record<string, DefinitionVariable> }> {
+  const { data } = await client.get<{ variables?: Record<string, DefinitionVariable> }>(
+    `/${encodeURIComponent(project)}/_apis/build/definitions/${definitionId}?api-version=7.1`,
+  );
+  return data;
+}
